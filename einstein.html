@@ -1,0 +1,794 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SAT Solvers &mdash; US Pycon December 2019  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Pattern Recognition and Reinforcement Learning" href="rock_paper.html" />
+    <link rel="prev" title="Depth First and Breath First Search" href="puzzle.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> US Pycon December 2019
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="puzzle.html">Depth First and Breath First Search</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SAT Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-do-we-care">Why Do We Care?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tools">Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-core-challenge">The Core Challenge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#higher-level-convenience-functions">Higher Level Convenience Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sudoku-puzzles">Sudoku Puzzles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-for-the-sudoku-solver">Code for the Sudoku Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#einstein-puzzle">Einstein Puzzle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#entities">Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#constraints">Constraints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#goal">Goal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#solution-techniques">Solution Techniques</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-for-the-einstein-puzzle">Code for the Einstein Puzzle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#essential-utilities-for-humanization">Essential Utilities for Humanization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rock_paper.html">Pattern Recognition and Reinforcement Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dining.html">SMT and Model Checkers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alpha_zero.html">AlphaZero</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">The Future</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">US Pycon December 2019</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>SAT Solvers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="sat-solvers">
+<h1>SAT Solvers<a class="headerlink" href="#sat-solvers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A <a class="reference external" href="https://en.wikipedia.org/wiki/Boolean_satisfiability_problem">SAT Solver</a>
+is tool for finding solutions to problems that can be specified using
+<a class="reference external" href="https://en.wikipedia.org/wiki/Propositional_calculus">propositional logic formulas</a>.</p>
+<p>Here’s an <a class="reference external" href="http://dsearls.org/courses/M120Concepts/ClassNotes/Logic/130A_examples.htm">example from Delmar E. Searls</a>.</p>
+<p>Start with a problem statement, “If the tire is flat then I will have to remove it and take it to the gas
+station.”</p>
+<p>Translate each basic statement to a variable so that <em>P</em> means “the tire
+is flat”, <em>Q</em> means “I have to remove the tire”, and <em>R</em> means “I have
+to take the tire to the gas station.</p>
+<p>Next, write the statement in symbolic form: P → (Q ∧ R) and make
+a truth table that shows when the statements is satisfied:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="12%" />
+<col width="12%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">P</th>
+<th class="head">Q</th>
+<th class="head">R</th>
+<th class="head">P → (Q ∧ R)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>T</td>
+<td>T</td>
+<td>T</td>
+<td>T</td>
+</tr>
+<tr class="row-odd"><td>T</td>
+<td>T</td>
+<td>F</td>
+<td>F</td>
+</tr>
+<tr class="row-even"><td>T</td>
+<td>F</td>
+<td>T</td>
+<td>F</td>
+</tr>
+<tr class="row-odd"><td>T</td>
+<td>F</td>
+<td>F</td>
+<td>F</td>
+</tr>
+<tr class="row-even"><td>F</td>
+<td>T</td>
+<td>T</td>
+<td>T</td>
+</tr>
+<tr class="row-odd"><td>F</td>
+<td>T</td>
+<td>F</td>
+<td>T</td>
+</tr>
+<tr class="row-even"><td>F</td>
+<td>F</td>
+<td>T</td>
+<td>T</td>
+</tr>
+<tr class="row-odd"><td>F</td>
+<td>F</td>
+<td>F</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Since there is at least one row that evaluates to <em>True</em>,
+we say the expression is <em>satisfiable</em>.</p>
+<p>What a SAT solver does is determine whether an expression
+is <em>satisfiable</em> and will generate one, some, or all of
+the rows that evaluate to true.</p>
+</div>
+<div class="section" id="why-do-we-care">
+<h2>Why Do We Care?<a class="headerlink" href="#why-do-we-care" title="Permalink to this headline">¶</a></h2>
+<p>There are many otherwise difficult problems that can be
+expressed in propositional logic and computers have gotten
+good at solving them.</p>
+<p>While the above example was simple, the problem grows
+exponentially with the number of variables.  The amazing
+fact of the early 21st century is that a number of
+heuristics have been found that make the problem
+tractable for many practical examples, even ones with
+tens of thousands of variables.</p>
+<p>One example is finding a layout to wire a printed
+circuit board in a way that doesn’t generate electrical
+interference.</p>
+</div>
+<div class="section" id="tools">
+<h2>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h2>
+<p>A tool that is available to Pythonistas is
+<a class="reference external" href="https://pypi.org/project/pycosat/">pycosat</a> which is
+itself a front-end for a  <a class="reference external" href="http://fmv.jku.at/picosat/">PicoSAT</a>
+which is a popular SAT solver written by Armin Biere in pure C.</p>
+<p>The first step is to rewrite the expression into
+<a class="reference external" href="https://en.wikipedia.org/wiki/Conjunctive_normal_form">Conjunctive Normal Form (CNF)</a>
+sometimes called a “product of sums”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(¬P ∨ Q) ∧ (¬P ∨ R)
+</pre></div>
+</div>
+<p>In <em>pycosat</em>, <code class="docutils literal notranslate"><span class="pre">P</span></code> is written as <code class="docutils literal notranslate"><span class="pre">1</span></code> because it is the first
+variable, and <code class="docutils literal notranslate"><span class="pre">¬P</span></code> is written as <code class="docutils literal notranslate"><span class="pre">-1</span></code> using a negative
+value to indicate negation.  We pass in a list of tuples with
+each disjunction was a separate tuple:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pycosat</span><span class="o">.</span><span class="n">itersolve</span><span class="p">([(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)])),</span> <span class="n">width</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="go">[[-1, 2, 3],</span>
+<span class="go"> [-1, 2, -3],</span>
+<span class="go"> [-1, -2, 3],</span>
+<span class="go"> [-1, -2, -3],</span>
+<span class="go"> [1, 2, 3]]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-core-challenge">
+<h2>The Core Challenge<a class="headerlink" href="#the-core-challenge" title="Permalink to this headline">¶</a></h2>
+<p>With a powerful SAT solver at you disposal, the remaining challenge
+is to express your problem in a way that <em>pycosat</em> can understand.</p>
+<p>I wrote some utility functions that can help.  For starters, we
+want to write our expressions with symbols instead of numbers
+and with <code class="docutils literal notranslate"><span class="pre">~</span></code> for negation instead of a minus sign:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">translate</span><span class="p">([[</span><span class="s1">&#39;~P&#39;</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">],[</span><span class="s1">&#39;~P&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">]])[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">[(-1, 2), (-1, 3)]</span>
+</pre></div>
+</div>
+<p>Often, it is easier to express constraints in
+<a class="reference external" href="https://en.wikipedia.org/wiki/Disjunctive_normal_form">Disjunctive normal form</a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>¬P ∨ (Q ∧ R)
+</pre></div>
+</div>
+<p>and then convert to the CNF required by <em>pycosat</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_dnf</span><span class="p">([[</span><span class="s1">&#39;~P&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Q&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">]])</span>
+<span class="go">[(&#39;~P&#39;, &#39;Q&#39;), (&#39;~P&#39;, &#39;R&#39;)]</span>
+</pre></div>
+</div>
+<p>Lastly, there is function, <em>solve_all</em>, that takes care of
+the round-trip between human readable and <em>pycosat</em> readable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cnf</span> <span class="o">=</span> <span class="n">from_dnf</span><span class="p">([[</span><span class="s1">&#39;~P&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Q&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_all</span><span class="p">(</span><span class="n">cnf</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="go">[[&#39;~P&#39;, &#39;Q&#39;, &#39;R&#39;],</span>
+<span class="go"> [&#39;~P&#39;, &#39;Q&#39;, &#39;~R&#39;],</span>
+<span class="go"> [&#39;~P&#39;, &#39;~Q&#39;, &#39;R&#39;],</span>
+<span class="go"> [&#39;~P&#39;, &#39;~Q&#39;, &#39;~R&#39;],</span>
+<span class="go"> [&#39;P&#39;, &#39;Q&#39;, &#39;R&#39;]]</span>
+</pre></div>
+</div>
+<p>It’s even more readable with humanistic variable names:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cnf</span> <span class="o">=</span> <span class="n">from_dnf</span><span class="p">([[</span><span class="s1">&#39;~FlatTire&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;NeedToRemove&#39;</span><span class="p">,</span> <span class="s1">&#39;GotoGasStation&#39;</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_all</span><span class="p">(</span><span class="n">cnf</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="go">[[&#39;~FlatTire&#39;, &#39;NeedToRemove&#39;, &#39;GotoGasStation&#39;],</span>
+<span class="go"> [&#39;~FlatTire&#39;, &#39;NeedToRemove&#39;, &#39;~GotoGasStation&#39;],</span>
+<span class="go"> [&#39;~FlatTire&#39;, &#39;~NeedToRemove&#39;, &#39;GotoGasStation&#39;],</span>
+<span class="go"> [&#39;~FlatTire&#39;, &#39;~NeedToRemove&#39;, &#39;~GotoGasStation&#39;],</span>
+<span class="go"> [&#39;FlatTire&#39;, &#39;NeedToRemove&#39;, &#39;GotoGasStation&#39;]]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="higher-level-convenience-functions">
+<h2>Higher Level Convenience Functions<a class="headerlink" href="#higher-level-convenience-functions" title="Permalink to this headline">¶</a></h2>
+<p>DNFs can be easy to reason about but are sometimes tedious to write-out.</p>
+<p>I have some convenience functions that build a CNF directly
+from constraints expressed with quantifiers:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Express that at least one of A, B, and C are true</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">some_of</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">])</span>
+<span class="p">[[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">]]</span>
+
+<span class="c1"># Express that at exactly one of A, B, and C is true</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">one_of</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">])</span>
+<span class="p">[(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;~A&#39;</span><span class="p">,</span> <span class="s1">&#39;~B&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;~A&#39;</span><span class="p">,</span> <span class="s1">&#39;~C&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;~B&#39;</span><span class="p">,</span> <span class="s1">&#39;~C&#39;</span><span class="p">)]</span>
+
+<span class="c1"># Express that no more than one of A, B, and C are true</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">Q</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+<span class="p">[(</span><span class="s1">&#39;~A&#39;</span><span class="p">,</span> <span class="s1">&#39;~B&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;~A&#39;</span><span class="p">,</span> <span class="s1">&#39;~C&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;~B&#39;</span><span class="p">,</span> <span class="s1">&#39;~C&#39;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>With these tools as primitives, it is easier
+to write higher level functions to express problem
+constraints in conjunctive normal form.</p>
+</div>
+<div class="section" id="sudoku-puzzles">
+<h2>Sudoku Puzzles<a class="headerlink" href="#sudoku-puzzles" title="Permalink to this headline">¶</a></h2>
+<p>Given a puzzle in this form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">8</span> <span class="mi">6</span><span class="o">|</span><span class="mi">4</span> <span class="mi">3</span><span class="o">|</span>
+ <span class="mi">5</span> <span class="o">|</span>   <span class="o">|</span> <span class="mi">7</span>
+   <span class="o">|</span> <span class="mi">2</span> <span class="o">|</span>
+<span class="o">---+---+---</span>
+<span class="mi">32</span> <span class="o">|</span> <span class="mi">8</span> <span class="o">|</span> <span class="mi">5</span>
+  <span class="mi">8</span><span class="o">|</span> <span class="mi">5</span> <span class="o">|</span><span class="mi">4</span>
+<span class="mi">1</span>  <span class="o">|</span> <span class="mi">7</span> <span class="o">|</span> <span class="mi">93</span>
+<span class="o">---+---+---</span>
+   <span class="o">|</span> <span class="mi">4</span> <span class="o">|</span>
+ <span class="mi">9</span> <span class="o">|</span>   <span class="o">|</span> <span class="mi">4</span>
+   <span class="o">|</span><span class="mi">6</span> <span class="mi">7</span><span class="o">|</span><span class="mi">2</span> <span class="mi">8</span>
+</pre></div>
+</div>
+<p>We enter it in Python as a single string row major order:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;8 64 3    5     7     2    &#39;</span>
+     <span class="s1">&#39;32  8  5   8 5 4  1   7  93&#39;</span>
+     <span class="s1">&#39;    4     9     4    6 72 8&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And expect the computer to solve it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">876</span><span class="o">|</span><span class="mi">413</span><span class="o">|</span><span class="mi">529</span>
+<span class="mi">452</span><span class="o">|</span><span class="mi">968</span><span class="o">|</span><span class="mi">371</span>
+<span class="mi">931</span><span class="o">|</span><span class="mi">725</span><span class="o">|</span><span class="mi">684</span>
+<span class="o">---+---+---</span>
+<span class="mi">329</span><span class="o">|</span><span class="mi">184</span><span class="o">|</span><span class="mi">756</span>
+<span class="mi">768</span><span class="o">|</span><span class="mi">359</span><span class="o">|</span><span class="mi">412</span>
+<span class="mi">145</span><span class="o">|</span><span class="mi">276</span><span class="o">|</span><span class="mi">893</span>
+<span class="o">---+---+---</span>
+<span class="mi">283</span><span class="o">|</span><span class="mi">541</span><span class="o">|</span><span class="mi">967</span>
+<span class="mi">697</span><span class="o">|</span><span class="mi">832</span><span class="o">|</span><span class="mi">145</span>
+<span class="mi">514</span><span class="o">|</span><span class="mi">697</span><span class="o">|</span><span class="mi">238</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="code-for-the-sudoku-solver">
+<h2>Code for the Sudoku Solver<a class="headerlink" href="#code-for-the-sudoku-solver" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sat_utils</span> <span class="k">import</span> <span class="n">solve_one</span><span class="p">,</span> <span class="n">one_of</span><span class="p">,</span> <span class="n">basic_fact</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">intern</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s1">AA AB AC BA BB BC CA CB CC</span>
+<span class="s1">AD AE AF BD BE BF CD CE CF</span>
+<span class="s1">AG AH AI BG BH BI CG CH CI</span>
+<span class="s1">DA DB DC EA EB EC FA FB FC</span>
+<span class="s1">DD DE DF ED EE EF FD FE FF</span>
+<span class="s1">DG DH DI EG EH EI FG FH FI</span>
+<span class="s1">GA GB GC HA HB HC IA IB IC</span>
+<span class="s1">GD GE GF HD HE HF ID IE IF</span>
+<span class="s1">GG GH GI HG HH HI IG IH II</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+<span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="s1">&#39;123456789&#39;</span><span class="p">)</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span>
+<span class="n">points</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="n">subsquares</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+    <span class="n">subsquares</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+<span class="c1"># Groups:  rows   + columns           + subsquares    </span>
+<span class="n">groups</span> <span class="o">=</span> <span class="n">table</span><span class="p">[:]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">table</span><span class="p">))</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">subsquares</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+<span class="k">del</span> <span class="n">grid</span><span class="p">,</span> <span class="n">subsquares</span><span class="p">,</span> <span class="n">table</span>     <span class="c1"># analysis requires only:  points, values, groups</span>
+
+<span class="k">def</span> <span class="nf">comb</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="s1">&#39;Format a fact (a value assigned to a given point)&#39;</span>
+    <span class="k">return</span> <span class="n">intern</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{point}</span><span class="s1"> </span><span class="si">{value}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">str_to_facts</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="s1">&#39;Convert str in row major form to a list of facts&#39;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">comb</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">point</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="s1">&#39; &#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">facts_to_str</span><span class="p">(</span><span class="n">facts</span><span class="p">):</span>
+    <span class="s1">&#39;Convert a list of facts to a string in row major order with blanks for unknowns&#39;</span>
+    <span class="n">point_to_value</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">,</span> <span class="n">facts</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">point_to_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">flatline</span><span class="p">):</span>
+    <span class="s1">&#39;Display grid from a string (values in row major order with blanks for unknowns)&#39;</span>
+    <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">*</span> <span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;-&#39;</span>  <span class="o">*</span> <span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">fmt</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">flatline</span><span class="p">[</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span><span class="o">+</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">given</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="s1">&#39;53  7    6  195    98    6 8   6   34  8 3  17   2   6 6    28    419  5    8  79&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;       75  4  5   8 17 6   36  2 7 1   5 1   1 5 8  96   1 82 3   4  9  48       &#39;</span><span class="p">,</span>
+    <span class="s1">&#39; 9 7 4  1    6 2 8    1 43  6     59   1 3   97     8  52 7    6 8 4    7  5 8 2 &#39;</span><span class="p">,</span>
+    <span class="s1">&#39;67 38      921   85    736 1 8  4 7  5 1 8 4  2 6  8 5 175    24   321      61 84&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;27  15  8   3  7 4    7     5 1   7   9   2   6   2 5     8    6 5  4   8  59  41&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;8 64 3    5     7     2    32  8  5   8 5 4  1   7  93    4     9     4    6 72 8&#39;</span><span class="p">,</span>
+    <span class="p">]:</span>
+
+    <span class="n">cnf</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># each point assigned exactly one value</span>
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+        <span class="n">cnf</span> <span class="o">+=</span> <span class="n">one_of</span><span class="p">(</span><span class="n">comb</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span>
+
+    <span class="c1"># each value gets assigned to exactly one point in each group</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">cnf</span> <span class="o">+=</span> <span class="n">one_of</span><span class="p">(</span><span class="n">comb</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">group</span><span class="p">)</span>
+
+    <span class="c1"># add facts for known values in a specific puzzle</span>
+    <span class="k">for</span> <span class="n">known</span> <span class="ow">in</span> <span class="n">str_to_facts</span><span class="p">(</span><span class="n">given</span><span class="p">):</span>
+        <span class="n">cnf</span> <span class="o">+=</span> <span class="n">basic_fact</span><span class="p">(</span><span class="n">known</span><span class="p">)</span>
+
+    <span class="c1"># solve it and display the results</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">facts_to_str</span><span class="p">(</span><span class="n">solve_one</span><span class="p">(</span><span class="n">cnf</span><span class="p">))</span>
+    <span class="n">show</span><span class="p">(</span><span class="n">given</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="n">show</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=-&#39;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="einstein-puzzle">
+<h2>Einstein Puzzle<a class="headerlink" href="#einstein-puzzle" title="Permalink to this headline">¶</a></h2>
+<p>Reportedly this puzzle is from Albert Einstein who is said
+to have remarked that fewer than 2% of the population can
+solve this puzzle (this is lore, neither fact is true).</p>
+<div class="section" id="entities">
+<h3>Entities<a class="headerlink" href="#entities" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>There are five houses in unique colors: Blue, green, red, white and yellow.</li>
+<li>In each house lives a person of unique nationality: British, Danish, German, Norwegian and Swedish.</li>
+<li>Each person drinks a unique beverage: Beer, coffee, milk, tea and water.</li>
+<li>Each person smokes a unique cigar brand: Blue Master, Dunhill, Pall Mall, Prince and blend.</li>
+<li>Each person keeps a unique pet: Cats, birds, dogs, fish and horses.</li>
+</ul>
+</div>
+<div class="section" id="constraints">
+<h3>Constraints<a class="headerlink" href="#constraints" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>The Brit lives in a red house.</li>
+<li>The Swede keeps dogs as pets.</li>
+<li>The Dane drinks tea.</li>
+<li>The green house is on the left of the white, next to it.</li>
+<li>The green house owner drinks coffee.</li>
+<li>The person who smokes Pall Mall rears birds.</li>
+<li>The owner of the yellow house smokes Dunhill.</li>
+<li>The man living in the house right in the center drinks milk.</li>
+<li>The Norwegian lives in the first house.</li>
+<li>The man who smokes blend lives next to the one who keeps cats.</li>
+<li>The man who keeps horses lives next to the man who smokes Dunhill.</li>
+<li>The owner who smokes Blue Master drinks beer.</li>
+<li>The German smokes Prince.</li>
+<li>The Norwegian lives next to the blue house.</li>
+<li>The man who smokes blend has a neighbor who drinks water.</li>
+</ul>
+</div>
+<div class="section" id="goal">
+<h3>Goal<a class="headerlink" href="#goal" title="Permalink to this headline">¶</a></h3>
+<p>The question you need to answer is: “Who keeps fish?”</p>
+</div>
+</div>
+<div class="section" id="solution-techniques">
+<h2>Solution Techniques<a class="headerlink" href="#solution-techniques" title="Permalink to this headline">¶</a></h2>
+<p>Christian Stigen Larsen has a
+<a class="reference external" href="https://csl.name/post/einsteins-puzzle/">nice write-up</a>
+on how to solve this problem by hand</p>
+<p>Instead, we’ll use a computer to determine all of the relationships:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;1 norwegian&#39;</span><span class="p">,</span> <span class="s1">&#39;1 yellow&#39;</span><span class="p">,</span> <span class="s1">&#39;1 cat&#39;</span><span class="p">,</span> <span class="s1">&#39;1 water&#39;</span><span class="p">,</span> <span class="s1">&#39;1 dunhill&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;2 dane&#39;</span><span class="p">,</span> <span class="s1">&#39;2 blue&#39;</span><span class="p">,</span> <span class="s1">&#39;2 horse&#39;</span><span class="p">,</span> <span class="s1">&#39;2 tea&#39;</span><span class="p">,</span> <span class="s1">&#39;2 blends&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;3 brit&#39;</span><span class="p">,</span> <span class="s1">&#39;3 red&#39;</span><span class="p">,</span> <span class="s1">&#39;3 bird&#39;</span><span class="p">,</span> <span class="s1">&#39;3 milk&#39;</span><span class="p">,</span> <span class="s1">&#39;3 pall mall&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;4 german&#39;</span><span class="p">,</span> <span class="s1">&#39;4 green&#39;</span><span class="p">,</span> <span class="s1">&#39;4 fish&#39;</span><span class="p">,</span> <span class="s1">&#39;4 coffee&#39;</span><span class="p">,</span> <span class="s1">&#39;4 prince&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;5 swede&#39;</span><span class="p">,</span> <span class="s1">&#39;5 white&#39;</span><span class="p">,</span> <span class="s1">&#39;5 dog&#39;</span><span class="p">,</span> <span class="s1">&#39;5 root beer&#39;</span><span class="p">,</span> <span class="s1">&#39;5 blue master&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The <em>fish</em> is in <em>green</em> house owned by the <em>german</em> who drinks <em>coffee</em>
+and smokes <em>Prince</em>.</p>
+</div>
+<div class="section" id="code-for-the-einstein-puzzle">
+<h2>Code for the Einstein Puzzle<a class="headerlink" href="#code-for-the-einstein-puzzle" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sat_utils</span> <span class="k">import</span> <span class="n">solve_one</span><span class="p">,</span> <span class="n">from_dnf</span><span class="p">,</span> <span class="n">one_of</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">intern</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+
+<span class="n">houses</span> <span class="o">=</span>     <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span>          <span class="s1">&#39;2&#39;</span><span class="p">,</span>      <span class="s1">&#39;3&#39;</span><span class="p">,</span>           <span class="s1">&#39;4&#39;</span><span class="p">,</span>         <span class="s1">&#39;5&#39;</span>       <span class="p">]</span>
+
+<span class="n">groups</span> <span class="o">=</span> <span class="p">[</span>
+             <span class="p">[</span><span class="s1">&#39;dane&#39;</span><span class="p">,</span>      <span class="s1">&#39;brit&#39;</span><span class="p">,</span>   <span class="s1">&#39;swede&#39;</span><span class="p">,</span>       <span class="s1">&#39;norwegian&#39;</span><span class="p">,</span> <span class="s1">&#39;german&#39;</span>   <span class="p">],</span>
+             <span class="p">[</span><span class="s1">&#39;yellow&#39;</span><span class="p">,</span>    <span class="s1">&#39;red&#39;</span><span class="p">,</span>    <span class="s1">&#39;white&#39;</span><span class="p">,</span>       <span class="s1">&#39;green&#39;</span><span class="p">,</span>     <span class="s1">&#39;blue&#39;</span>     <span class="p">],</span>
+             <span class="p">[</span><span class="s1">&#39;horse&#39;</span><span class="p">,</span>     <span class="s1">&#39;cat&#39;</span><span class="p">,</span>    <span class="s1">&#39;bird&#39;</span><span class="p">,</span>        <span class="s1">&#39;fish&#39;</span><span class="p">,</span>      <span class="s1">&#39;dog&#39;</span>      <span class="p">],</span>
+             <span class="p">[</span><span class="s1">&#39;water&#39;</span><span class="p">,</span>     <span class="s1">&#39;tea&#39;</span><span class="p">,</span>    <span class="s1">&#39;milk&#39;</span><span class="p">,</span>        <span class="s1">&#39;coffee&#39;</span><span class="p">,</span>    <span class="s1">&#39;root beer&#39;</span><span class="p">],</span>
+             <span class="p">[</span><span class="s1">&#39;pall mall&#39;</span><span class="p">,</span> <span class="s1">&#39;prince&#39;</span><span class="p">,</span> <span class="s1">&#39;blue master&#39;</span><span class="p">,</span> <span class="s1">&#39;dunhill&#39;</span><span class="p">,</span>   <span class="s1">&#39;blends&#39;</span>   <span class="p">],</span>
+<span class="p">]</span>
+
+<span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">group</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">comb</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">house</span><span class="p">):</span>
+    <span class="s1">&#39;Format how a value is shown at a given house&#39;</span>
+    <span class="k">return</span> <span class="n">intern</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{value}</span><span class="s1"> </span><span class="si">{house}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">found_at</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">house</span><span class="p">):</span>
+    <span class="s1">&#39;Value known to be at a specific house&#39;</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">comb</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">house</span><span class="p">),)]</span>
+
+<span class="k">def</span> <span class="nf">same_house</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">value2</span><span class="p">):</span>
+    <span class="s1">&#39;The two values occur in the same house:  brit1 &amp; red1 | brit2 &amp; red2 ...&#39;</span>
+    <span class="k">return</span> <span class="n">from_dnf</span><span class="p">([(</span><span class="n">comb</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="n">comb</span><span class="p">(</span><span class="n">value2</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">houses</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">consecutive</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">value2</span><span class="p">):</span>
+    <span class="s1">&#39;The values are in consecutive houses:  green1 &amp; white2 | green2 &amp; white3 ...&#39;</span>
+    <span class="k">return</span> <span class="n">from_dnf</span><span class="p">([(</span><span class="n">comb</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="n">comb</span><span class="p">(</span><span class="n">value2</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+                     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">houses</span><span class="p">,</span> <span class="n">houses</span><span class="p">[</span><span class="mi">1</span><span class="p">:])])</span>
+
+<span class="k">def</span> <span class="nf">beside</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">value2</span><span class="p">):</span>
+    <span class="s1">&#39;The values occur side-by-side: blends1 &amp; cat2 | blends2 &amp; cat1 ...&#39;</span>
+    <span class="k">return</span> <span class="n">from_dnf</span><span class="p">([(</span><span class="n">comb</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="n">comb</span><span class="p">(</span><span class="n">value2</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+                     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">houses</span><span class="p">,</span> <span class="n">houses</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span> <span class="o">+</span>
+                    <span class="p">[(</span><span class="n">comb</span><span class="p">(</span><span class="n">value2</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="n">comb</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+                     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">houses</span><span class="p">,</span> <span class="n">houses</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+                    <span class="p">)</span>
+
+<span class="n">cnf</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># each house gets exactly one value from each attribute group</span>
+<span class="k">for</span> <span class="n">house</span> <span class="ow">in</span> <span class="n">houses</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+        <span class="n">cnf</span> <span class="o">+=</span> <span class="n">one_of</span><span class="p">(</span><span class="n">comb</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">house</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">group</span><span class="p">)</span>
+
+<span class="c1"># each value gets assigned to exactly one house</span>
+<span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+    <span class="n">cnf</span> <span class="o">+=</span> <span class="n">one_of</span><span class="p">(</span><span class="n">comb</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">house</span><span class="p">)</span> <span class="k">for</span> <span class="n">house</span> <span class="ow">in</span> <span class="n">houses</span><span class="p">)</span>
+
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">same_house</span><span class="p">(</span><span class="s1">&#39;brit&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">same_house</span><span class="p">(</span><span class="s1">&#39;swede&#39;</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">same_house</span><span class="p">(</span><span class="s1">&#39;dane&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">consecutive</span><span class="p">(</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">same_house</span><span class="p">(</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;coffee&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">same_house</span><span class="p">(</span><span class="s1">&#39;pall mall&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">same_house</span><span class="p">(</span><span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="s1">&#39;dunhill&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">found_at</span><span class="p">(</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">found_at</span><span class="p">(</span><span class="s1">&#39;norwegian&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">beside</span><span class="p">(</span><span class="s1">&#39;blends&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">beside</span><span class="p">(</span><span class="s1">&#39;horse&#39;</span><span class="p">,</span> <span class="s1">&#39;dunhill&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">same_house</span><span class="p">(</span><span class="s1">&#39;blue master&#39;</span><span class="p">,</span> <span class="s1">&#39;root beer&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">same_house</span><span class="p">(</span><span class="s1">&#39;german&#39;</span><span class="p">,</span> <span class="s1">&#39;prince&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">beside</span><span class="p">(</span><span class="s1">&#39;norwegian&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">+=</span> <span class="n">beside</span><span class="p">(</span><span class="s1">&#39;blends&#39;</span><span class="p">,</span> <span class="s1">&#39;water&#39;</span><span class="p">)</span>
+
+<span class="n">pprint</span><span class="p">(</span><span class="n">solve_one</span><span class="p">(</span><span class="n">cnf</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="essential-utilities-for-humanization">
+<h2>Essential Utilities for Humanization<a class="headerlink" href="#essential-utilities-for-humanization" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;Utility functions to humanize interaction with pycosat&#39;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Raymond Hettinger&#39;</span>
+
+<span class="kn">import</span> <span class="nn">pycosat</span>                  <span class="c1"># https://pypi.python.org/pypi/pycosat</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">intern</span>
+
+<span class="k">def</span> <span class="nf">make_translate</span><span class="p">(</span><span class="n">cnf</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make translator from symbolic CNF to PycoSat&#39;s numbered clauses.</span>
+<span class="sd">       Return a literal to number dictionary and reverse lookup dict</span>
+
+<span class="sd">        &gt;&gt;&gt; make_translate([[&#39;~a&#39;, &#39;b&#39;, &#39;~c&#39;], [&#39;a&#39;, &#39;~c&#39;]])</span>
+<span class="sd">        ({&#39;a&#39;: 1, &#39;c&#39;: 3, &#39;b&#39;: 2, &#39;~a&#39;: -1, &#39;~b&#39;: -2, &#39;~c&#39;: -3},</span>
+<span class="sd">         {1: &#39;a&#39;, 2: &#39;b&#39;, 3: &#39;c&#39;, -1: &#39;~a&#39;, -3: &#39;~c&#39;, -2: &#39;~b&#39;})</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lit2num</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="n">cnf</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">literal</span> <span class="ow">in</span> <span class="n">clause</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">literal</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lit2num</span><span class="p">:</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="n">literal</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">literal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;~&#39;</span> <span class="k">else</span> <span class="n">literal</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lit2num</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">lit2num</span><span class="p">[</span><span class="n">intern</span><span class="p">(</span><span class="n">var</span><span class="p">)]</span> <span class="o">=</span> <span class="n">num</span>
+                <span class="n">lit2num</span><span class="p">[</span><span class="n">intern</span><span class="p">(</span><span class="s1">&#39;~&#39;</span> <span class="o">+</span> <span class="n">var</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="n">num</span>
+    <span class="n">num2var</span> <span class="o">=</span> <span class="p">{</span><span class="n">num</span><span class="p">:</span><span class="n">lit</span> <span class="k">for</span> <span class="n">lit</span><span class="p">,</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">lit2num</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="n">lit2num</span><span class="p">,</span> <span class="n">num2var</span>
+
+<span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="n">cnf</span><span class="p">,</span> <span class="n">uniquify</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="s1">&#39;Translate a symbolic cnf to a numbered cnf and return a reverse mapping&#39;</span>
+    <span class="c1"># DIMACS CNF file format:</span>
+    <span class="c1"># http://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html</span>
+    <span class="k">if</span> <span class="n">uniquify</span><span class="p">:</span>
+        <span class="n">cnf</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">cnf</span><span class="p">))</span>
+    <span class="n">lit2num</span><span class="p">,</span> <span class="n">num2var</span> <span class="o">=</span> <span class="n">make_translate</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
+    <span class="n">numbered_cnf</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">([</span><span class="n">lit2num</span><span class="p">[</span><span class="n">lit</span><span class="p">]</span> <span class="k">for</span> <span class="n">lit</span> <span class="ow">in</span> <span class="n">clause</span><span class="p">])</span> <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="n">cnf</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">numbered_cnf</span><span class="p">,</span> <span class="n">num2var</span>
+
+<span class="k">def</span> <span class="nf">itersolve</span><span class="p">(</span><span class="n">symbolic_cnf</span><span class="p">,</span> <span class="n">include_neg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">numbered_cnf</span><span class="p">,</span> <span class="n">num2var</span> <span class="o">=</span> <span class="n">translate</span><span class="p">(</span><span class="n">symbolic_cnf</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">solution</span> <span class="ow">in</span> <span class="n">pycosat</span><span class="o">.</span><span class="n">itersolve</span><span class="p">(</span><span class="n">numbered_cnf</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="p">[</span><span class="n">num2var</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">solution</span> <span class="k">if</span> <span class="n">include_neg</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">solve_all</span><span class="p">(</span><span class="n">symcnf</span><span class="p">,</span> <span class="n">include_neg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itersolve</span><span class="p">(</span><span class="n">symcnf</span><span class="p">,</span> <span class="n">include_neg</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">solve_one</span><span class="p">(</span><span class="n">symcnf</span><span class="p">,</span> <span class="n">include_neg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">itersolve</span><span class="p">(</span><span class="n">symcnf</span><span class="p">,</span> <span class="n">include_neg</span><span class="p">))</span>
+
+<span class="c1">############### Support for Building CNFs ##########################</span>
+
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">neg</span><span class="p">(</span><span class="n">element</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;element&#39;</span><span class="p">:</span>
+    <span class="s1">&#39;Negate a single element&#39;</span>
+    <span class="k">return</span> <span class="n">intern</span><span class="p">(</span><span class="n">element</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;~&#39;</span> <span class="o">+</span> <span class="n">element</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">from_dnf</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+    <span class="s1">&#39;Convert from or-of-ands to and-of-ors&#39;</span>
+    <span class="n">cnf</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">()}</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+        <span class="n">nl</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">([</span><span class="n">literal</span><span class="p">])</span> <span class="p">:</span> <span class="n">neg</span><span class="p">(</span><span class="n">literal</span><span class="p">)</span> <span class="k">for</span> <span class="n">literal</span> <span class="ow">in</span> <span class="n">group</span><span class="p">}</span>
+        <span class="c1"># The &quot;clause | literal&quot; prevents dup lits: {x, x, y} -&gt; {x, y}</span>
+        <span class="c1"># The nl check skips over identities: {x, ~x, y} -&gt; True</span>
+        <span class="n">cnf</span> <span class="o">=</span> <span class="p">{</span><span class="n">clause</span> <span class="o">|</span> <span class="n">literal</span> <span class="k">for</span> <span class="n">literal</span> <span class="ow">in</span> <span class="n">nl</span> <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="n">cnf</span>
+              <span class="k">if</span> <span class="n">nl</span><span class="p">[</span><span class="n">literal</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clause</span><span class="p">}</span>
+        <span class="c1"># The sc check removes clauses with superfluous terms:</span>
+        <span class="c1">#     {{x}, {x, z}, {y, z}} -&gt; {{x}, {y, z}}</span>
+        <span class="c1"># Should this be left until the end?</span>
+        <span class="n">sc</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">cnf</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>          <span class="c1"># XXX not deterministic</span>
+        <span class="n">cnf</span> <span class="o">-=</span> <span class="p">{</span><span class="n">clause</span> <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="n">cnf</span> <span class="k">if</span> <span class="n">clause</span> <span class="o">&gt;</span> <span class="n">sc</span><span class="p">}</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">cnf</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">Q</span><span class="p">:</span>
+    <span class="s1">&#39;Quantifier for the number of elements that are true&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elements</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">neg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="o">-</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">(elements=</span><span class="si">{self.elements!r}</span><span class="s1">)&#39;</span>
+
+<span class="k">def</span> <span class="nf">all_of</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+    <span class="s1">&#39;Forces inclusion of matching rows on a truth table&#39;</span>
+    <span class="k">return</span> <span class="n">Q</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">some_of</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+    <span class="s1">&#39;At least one of the elements must be true&#39;</span>
+    <span class="k">return</span> <span class="n">Q</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+
+<span class="k">def</span> <span class="nf">one_of</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+    <span class="s1">&#39;Exactly one of the elements is true&#39;</span>
+    <span class="k">return</span> <span class="n">Q</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+
+<span class="k">def</span> <span class="nf">basic_fact</span><span class="p">(</span><span class="n">element</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+    <span class="s1">&#39;Assert that this one element always matches&#39;</span>
+    <span class="k">return</span> <span class="n">Q</span><span class="p">([</span><span class="n">element</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span>
+
+<span class="k">def</span> <span class="nf">none_of</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;cnf&#39;</span><span class="p">:</span>
+    <span class="s1">&#39;Forces exclusion of matching rows on a truth table&#39;</span>
+    <span class="k">return</span> <span class="n">Q</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rock_paper.html" class="btn btn-neutral float-right" title="Pattern Recognition and Reinforcement Learning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="puzzle.html" class="btn btn-neutral" title="Depth First and Breath First Search" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Raymond Hettinger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

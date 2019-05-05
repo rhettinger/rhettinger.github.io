@@ -1,0 +1,280 @@
+SAT Solvers
+===========
+
+Overview
+--------
+
+A `SAT Solver <https://en.wikipedia.org/wiki/Boolean_satisfiability_problem>`_
+is tool for finding solutions to problems that can be specified using
+`propositional logic formulas
+<https://en.wikipedia.org/wiki/Propositional_calculus>`_.
+
+Here's an `example from Delmar E. Searls
+<http://dsearls.org/courses/M120Concepts/ClassNotes/Logic/130A_examples.htm>`_.
+
+Start with a problem statement, "If the tire is flat then I will have to remove it and take it to the gas
+station."
+
+Translate each basic statement to a variable so that *P* means "the tire
+is flat", *Q* means "I have to remove the tire", and *R* means "I have
+to take the tire to the gas station.
+
+Next, write the statement in symbolic form: P → (Q ∧ R) and make
+a truth table that shows when the statements is satisfied:
+
+    ==   ==   ==    ===========
+    P    Q    R     P → (Q ∧ R)
+    ==   ==   ==    ===========
+    T    T    T     T
+    T    T    F     F
+    T    F    T     F
+    T    F    F     F
+    F    T    T     T
+    F    T    F     T
+    F    F    T     T
+    F    F    F     T
+    ==   ==   ==    ===========
+
+Since there is at least one row that evaluates to *True*,
+we say the expression is *satisfiable*.
+
+What a SAT solver does is determine whether an expression
+is *satisfiable* and will generate one, some, or all of
+the rows that evaluate to true.
+
+
+Why Do We Care?
+---------------
+
+There are many otherwise difficult problems that can be
+expressed in propositional logic and computers have gotten
+good at solving them.
+
+While the above example was simple, the problem grows
+exponentially with the number of variables.  The amazing
+fact of the early 21st century is that a number of
+heuristics have been found that make the problem
+tractable for many practical examples, even ones with
+tens of thousands of variables.
+
+One example is finding a layout to wire a printed
+circuit board in a way that doesn't generate electrical
+interference.
+
+Tools
+-----
+
+A tool that is available to Pythonistas is
+`pycosat <https://pypi.org/project/pycosat/>`_ which is
+itself a front-end for a  `PicoSAT <http://fmv.jku.at/picosat/>`_
+which is a popular SAT solver written by Armin Biere in pure C.
+
+The first step is to rewrite the expression into
+`Conjunctive Normal Form (CNF)
+<https://en.wikipedia.org/wiki/Conjunctive_normal_form>`_
+sometimes called a "product of sums"::
+
+    (¬P ∨ Q) ∧ (¬P ∨ R)
+
+In *pycosat*, ``P`` is written as ``1`` because it is the first
+variable, and ``¬P`` is written as ``-1`` using a negative
+value to indicate negation.  We pass in a list of tuples with
+each disjunction was a separate tuple:
+
+        >>> pprint(list(pycosat.itersolve([(-1, 2), (-1, 3)])), width=20)
+        [[-1, 2, 3],
+         [-1, 2, -3],
+         [-1, -2, 3],
+         [-1, -2, -3],
+         [1, 2, 3]]
+
+The Core Challenge
+------------------
+
+With a powerful SAT solver at you disposal, the remaining challenge
+is to express your problem in a way that *pycosat* can understand.
+
+I wrote some utility functions that can help.  For starters, we
+want to write our expressions with symbols instead of numbers
+and with ``~`` for negation instead of a minus sign:
+
+        >>> translate([['~P', 'Q'],['~P', 'R']])[0]
+        [(-1, 2), (-1, 3)]
+
+Often, it is easier to express constraints in
+`Disjunctive normal form
+<https://en.wikipedia.org/wiki/Disjunctive_normal_form>`_ ::
+
+        ¬P ∨ (Q ∧ R)
+
+and then convert to the CNF required by *pycosat*:
+
+        >>> from_dnf([['~P'], ['Q', 'R']])
+        [('~P', 'Q'), ('~P', 'R')]
+
+Lastly, there is function, *solve_all*, that takes care of
+the round-trip between human readable and *pycosat* readable:
+
+        >>> cnf = from_dnf([['~P'], ['Q', 'R']])
+        >>> solve_all(cnf, True)
+        [['~P', 'Q', 'R'],
+         ['~P', 'Q', '~R'],
+         ['~P', '~Q', 'R'],
+         ['~P', '~Q', '~R'],
+         ['P', 'Q', 'R']]
+
+It's even more readable with humanistic variable names:
+
+        >>> cnf = from_dnf([['~FlatTire'], ['NeedToRemove', 'GotoGasStation']])
+        >>> solve_all(cnf, True)
+        [['~FlatTire', 'NeedToRemove', 'GotoGasStation'],
+         ['~FlatTire', 'NeedToRemove', '~GotoGasStation'],
+         ['~FlatTire', '~NeedToRemove', 'GotoGasStation'],
+         ['~FlatTire', '~NeedToRemove', '~GotoGasStation'],
+         ['FlatTire', 'NeedToRemove', 'GotoGasStation']]
+
+
+Higher Level Convenience Functions
+----------------------------------
+
+DNFs can be easy to reason about but are sometimes tedious to write-out.
+
+I have some convenience functions that build a CNF directly
+from constraints expressed with quantifiers::
+
+        # Express that at least one of A, B, and C are true
+        >>> some_of(['A', 'B', 'C'])
+        [['A', 'B', 'C']]
+
+        # Express that at exactly one of A, B, and C is true
+        >>> one_of(['A', 'B', 'C'])
+        [('A', 'B', 'C'),
+         ('~A', '~B'),
+         ('~A', '~C'),
+         ('~B', '~C')]
+
+        # Express that no more than one of A, B, and C are true
+        >>> Q(['A', 'B', 'C']) <= 1
+        [('~A', '~B'),
+         ('~A', '~C'),
+         ('~B', '~C')]
+
+With these tools as primitives, it is easier
+to write higher level functions to express problem
+constraints in conjunctive normal form.
+
+
+Sudoku Puzzles
+--------------
+
+Given a puzzle in this form::
+
+    8 6|4 3|
+     5 |   | 7
+       | 2 |
+    ---+---+---
+    32 | 8 | 5
+      8| 5 |4
+    1  | 7 | 93
+    ---+---+---
+       | 4 |
+     9 |   | 4
+       |6 7|2 8
+
+We enter it in Python as a single string row major order::
+
+    s = ('8 64 3    5     7     2    '
+         '32  8  5   8 5 4  1   7  93'
+         '    4     9     4    6 72 8')
+
+And expect the computer to solve it::
+
+    876|413|529
+    452|968|371
+    931|725|684
+    ---+---+---
+    329|184|756
+    768|359|412
+    145|276|893
+    ---+---+---
+    283|541|967
+    697|832|145
+    514|697|238
+
+
+Code for the Sudoku Solver
+--------------------------
+
+.. literalinclude:: code/sudoku.py
+
+
+Einstein Puzzle
+---------------
+
+Reportedly this puzzle is from Albert Einstein who is said
+to have remarked that fewer than 2% of the population can
+solve this puzzle (this is lore, neither fact is true).
+
+Entities
+........
+
+* There are five houses in unique colors: Blue, green, red, white and yellow.
+* In each house lives a person of unique nationality: British, Danish, German, Norwegian and Swedish.
+* Each person drinks a unique beverage: Beer, coffee, milk, tea and water.
+* Each person smokes a unique cigar brand: Blue Master, Dunhill, Pall Mall, Prince and blend.
+* Each person keeps a unique pet: Cats, birds, dogs, fish and horses.
+
+Constraints
+...........
+
+* The Brit lives in a red house.
+* The Swede keeps dogs as pets.
+* The Dane drinks tea.
+* The green house is on the left of the white, next to it.
+* The green house owner drinks coffee.
+* The person who smokes Pall Mall rears birds.
+* The owner of the yellow house smokes Dunhill.
+* The man living in the house right in the center drinks milk.
+* The Norwegian lives in the first house.
+* The man who smokes blend lives next to the one who keeps cats.
+* The man who keeps horses lives next to the man who smokes Dunhill.
+* The owner who smokes Blue Master drinks beer.
+* The German smokes Prince.
+* The Norwegian lives next to the blue house.
+* The man who smokes blend has a neighbor who drinks water.
+
+Goal
+....
+
+The question you need to answer is: "Who keeps fish?"
+
+
+Solution Techniques
+-------------------
+
+Christian Stigen Larsen has a
+`nice write-up <https://csl.name/post/einsteins-puzzle/>`_
+on how to solve this problem by hand
+
+Instead, we'll use a computer to determine all of the relationships::
+
+    ['1 norwegian', '1 yellow', '1 cat', '1 water', '1 dunhill',
+     '2 dane', '2 blue', '2 horse', '2 tea', '2 blends',
+     '3 brit', '3 red', '3 bird', '3 milk', '3 pall mall',
+     '4 german', '4 green', '4 fish', '4 coffee', '4 prince',
+     '5 swede', '5 white', '5 dog', '5 root beer', '5 blue master']
+
+The *fish* is in *green* house owned by the *german* who drinks *coffee*
+and smokes *Prince*.
+
+
+Code for the Einstein Puzzle
+----------------------------
+
+.. literalinclude:: code/einstein.py
+
+
+Essential Utilities for Humanization
+------------------------------------
+
+.. literalinclude:: code/sat_utils.py

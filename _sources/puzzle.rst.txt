@@ -1,0 +1,170 @@
+Depth First and Breath First Search
+===================================
+
+Overview
+--------
+
+A number of puzzles can be solved by either depth first search
+or breadth first search.
+
+Both are easy to implement using ``collections.deque()``.
+
+.. image:: images/depth_first_breadth_first.gif
+
+
+
+Generic Puzzle Solver
+---------------------
+
+Here I present a generic puzzle solver that works
+on a broad class of puzzles.
+
+The core idea is that we need very few things to describe
+the puzzle in a way that a solver can find a solution:
+
+1) We need an initial position (the unsolved puzzle)
+2) We need a rule (typically an iterator) to generate
+   all possible moves from a position.
+3) We need to recognize the goal state.
+
+Optionally, we can provide some extras:
+
+4) A nice ``__repr__`` method to display the puzzle
+   position in a way recognizable to us.
+5) A way to recognize that some positions are
+   considered to be equivalent and don't need
+   to be explored twice (i.e. in tic-tac-toe,
+   all four corner opening moves essentially
+   describe the same).
+
+
+Jug Filling Problem
+-------------------
+
+**Problem statement:**
+"Given a two empty jugs with 3 and 5 liter capacities and a full
+jug with 8 liters, find a sequence of pours leaving four liters
+in the two largest jugs."
+
+.. image:: images/jugs-problem.gif
+
+How to code it:
+
+.. literalinclude:: code/jug_fill.py
+
+How a puzzle instance works::
+
+        >>> from pprint import pprint
+        >>> from jug_fill import JugFill
+        >>> p = JugFill()                # Make a fresh puzzle
+        >>> print(p)                     # Display the current position
+        (0, 0, 8)
+        >>> p.isgoal()                   # Are we at the goal state?
+        False
+        >>> for move in p:               # Display possible moves
+        ...     print(move)
+        ...
+        (3, 0, 5)
+        (0, 5, 3)
+
+Running the *solve()* method immediately generates a solution::
+
+        [(0, 0, 8),
+         (0, 5, 3),
+         (3, 2, 3),
+         (0, 2, 6),
+         (2, 0, 6),
+         (2, 5, 1),
+         (3, 4, 1),
+         (0, 4, 4)]
+
+
+Sliding Block Puzzle
+--------------------
+
+**Problem statement:**
+"Slide blocks within a fixed grid so that the largest block
+ends-up in the lower left corner."
+
+.. image:: images/quzzle.jpg
+
+How to code it:
+
+.. literalinclude:: code/papuzzle.py
+
+Output::
+
+       [
+       1122
+       1133
+       45..
+       6788
+       6799
+       ,
+
+       1122
+       1133
+       4.5.
+       6788
+       6799
+       ,
+
+        -- ... ---
+
+       7633
+       7622
+       1154
+       1199
+       ..88
+       ,
+
+       7633
+       7622
+       ..54
+       1199
+       1188
+       ]
+
+
+Core Logic
+----------
+
+The only essential Python tool you need is ``collections.deque()``,
+the double ended queue.
+
+For a breadth first search, we *pop* an unexplored positions off
+of a deque.  For each position, we generate the next possible
+moves and *prepend* them to the deque of unexplored move.
+
+For a depth first search, we *append* rather than prepend.
+
+To make it possible to replay the sequence of moves,
+we keep a *trail* dictionary that maps each move to
+its predecessor.
+
+As an optimization, we call an optional user supplied
+*canonical()* method to see if the current position
+is equivalent to one that we've already explored.
+
+::
+
+    def solve(pos, depthFirst=False):
+        queue = deque([pos])
+        trail = {intern(pos.canonical()): None}
+        solution = deque()
+        load = queue.append if depthFirst else queue.appendleft
+
+        while not pos.isgoal():
+            for m in pos:
+                c = m.canonical()
+                if c in trail:
+                    continue
+                trail[intern(c)] = pos
+                load(m)
+            pos = queue.pop()
+
+        while pos:
+            solution.appendleft(pos)
+            pos = trail[pos.canonical()]
+
+        return list(solution)

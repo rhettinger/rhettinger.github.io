@@ -1,0 +1,163 @@
+Pattern Recognition and Reinforcement Learning
+==============================================
+
+Overview
+--------
+
+**Problem:** Getting son to eat broccoli
+
+**Strategies**:
+
+* Acclimatization: Serve once a week until he gets used to it
+* Better than alternative: It's better than spinach
+* Enticements: We'll watch your favorite movie after
+* Trickery: It's candy
+* Testimonial: Your best friend likes it
+* Wait it out: We're not leaving this table until ...
+* Piecemeal: Just one little bite
+* Appeal to Reason: Great source of vitamins K and C
+
+**Reinforcement Learning:**
+
+Randomly try strategies.  If they work, choose them more often.
+
+
+Rock Paper Scissors
+-------------------
+
+This is an iterated adversarial zero-sum two-person game of perfect information.
+
+.. image:: images/300px-Rock-paper-scissors.svg.png
+
+
+The scoring logic is easily encoded in a Python dictionary::
+
+    # scorer['RS'] -> 1 meaning Rock cuts Scissors is +1 for the first player.
+    scorer = dict(SP=1, PR=1, RS=1, PS=-1, RP=-1, SR=-1, SS=0, PP=0, RR=0)
+
+Now, it's time to thinking about winning (not losing):
+
+* Playing randomly assures that we lose no more than one-third of the time, regardless
+  of our opponent's strategy.
+
+* If our opponent is completely predictable, we can always win.
+
+* In the real world, humans have a hard time simulating perfect randomness
+  or who "have a plan" to beat us:
+
+  - A mild preference for *paper*
+  - Propensity to select *rock* after they've played *scissors*
+  - If we play *paper*, they often select *scissors* on the next round
+  - They tend to copy our last play
+
+* In other words, there may be patterns that we can detect and exploit
+  to win more than a third of the time.
+
+
+Our Approach
+------------
+
+* Generate multiple competing pattern recognition strategies
+
+* Choose between the strategies `multi-arm bandit <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_
+  approach to `reinforcement learning <https://en.wikipedia.org/wiki/Reinforcement_learning>`_.
+
+* Core logic::
+
+      for trial in range(trials):
+        # choose our move
+        # get opponent's move
+        # determine the winner
+        # update move history and strategy weights
+
+
+Helpful Python Skills
+-----------------------
+
+* ``itertools.chain()`` links to multiple iterables into one::
+
+        >>> from itertools import chain
+        >>> list(chain('RPRPS', 'RPS'))
+        ['R', 'P', 'R', 'P', 'S', 'R', 'P', 'S']
+
+* ``itertools.cycle()`` repeats a sequence over and over again::
+
+        >>> from itertools import cycle, islice
+        >>> list(islice(cycle('RPS'), 9))
+        ['R', 'P', 'S', 'R', 'P', 'S', 'R', 'P', 'S']
+
+* ``collections.Counter()`` tallies frequencies of the inputs::
+
+        >>> from collections import Counter
+        >>> Counter('RPRPSRPSR')
+        Counter({'R': 4, 'P': 3, 'S': 2})
+
+* ``Counter.most_common(n)`` picks the *n* most common counts::
+
+        >>> Counter('RPRPSRPSR').most_common(2)
+        [('R', 4), ('P', 3)]
+
+* ``zip(*somedict.items())`` transposes items into a separate keys and values::
+
+        >>> d = dict(R=4, P=3, S=2)
+        >>> keys, values = zip(*d.items())
+        >>> keys
+        ('R', 'P', 'S')
+        >>> values
+        (4, 3, 2)
+
+* ``zip(a, a[1:])`` groups input into overlapping digraphs::
+
+        >>> a = 'abcde'
+        >>> list(zip(a, a[1:]))
+        [('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'e')]
+
+* ``random.choices(population, weights)[0]`` makes a weighted choice from a population::
+
+        >>> from random import choices
+        >>> choices(['R', 'P', 'S'], [6, 3, 1], k=10)
+        ['P', 'P', 'R', 'S', 'R', 'P', 'P', 'R', 'R', 'P']
+        >>> Counter(_)
+        Counter({'P': 5, 'R': 4, 'S': 1})
+
+
+The Code
+--------
+
+.. literalinclude:: code/rock_paper_scissors.py
+
+
+Critiques and Improvements
+--------------------------
+
+* When humans are losing, they generally change they strategy,
+  so we should "age" our weights to adapt to the change.
+
+* The *random_reply* strategy wins one-third of the time
+  so it keeps getting selected when other strategies are
+  doing better.
+
+* We need to keep *random_reply* in the mix in case our
+  strategies get figured-out and gamed. Randomness is
+  your best defense against a smarter adversary.
+
+* The multi-arm bandit approach (choosing the strategy
+  proportionally to wins and losses) results in very
+  slow learning.
+
+* Humans get bored with this game quickly, so it is hard
+  get people to test it.
+
+
+Where you can go from here
+--------------------------
+
+* None of the code logic is hard-wired to the basic game.
+* It is easy to add new strategies.
+* Or to evaluate various published
+  `how-to-win strategies <https://www.telegraph.co.uk/men/thinking-man/11051704/How-to-always-win-at-rock-paper-scissors.html>`_.
+* Changing the game definition logic allows for more complex
+  games such as rock-paper-scissors-lizard-spock:
+
+.. image:: images/1200px-Rock_Paper_Scissors_Lizard_Spock_en.svg.png
+

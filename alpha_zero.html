@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>AlphaZero &mdash; US Pycon December 2019  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The Future" href="philosophy.html" />
+    <link rel="prev" title="SMT and Model Checkers" href="dining.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> US Pycon December 2019
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="puzzle.html">Depth First and Breath First Search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="einstein.html">SAT Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rock_paper.html">Pattern Recognition and Reinforcement Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dining.html">SMT and Model Checkers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">AlphaZero</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-approach">The Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-you-can-run">Code You Can Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview-of-monte-carlo-tree-search">Overview of Monte Carlo Tree Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-algorithm">The Algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">The Future</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">US Pycon December 2019</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>AlphaZero</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="alphazero">
+<h1>AlphaZero<a class="headerlink" href="#alphazero" title="Permalink to this headline">¶</a></h1>
+<p>A <em>little</em> bit harder problem:</p>
+<ul class="simple">
+<li>Learn to play complex games given <em>only</em> the rules to the game</li>
+<li>Beat the best human players <em>and</em> their best hand-written programs</li>
+<li>Learning time limit:  Less than a day</li>
+</ul>
+<img alt="_images/chess_shogi_go.png" src="_images/chess_shogi_go.png" />
+<p>Typical result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Game</span> <span class="mi">3</span> <span class="o">-</span> <span class="n">White</span><span class="p">:</span> <span class="n">AlphaZero</span> <span class="n">Black</span><span class="p">:</span> <span class="n">Stockfish</span>
+
+<span class="mf">1.</span> <span class="n">d4</span> <span class="n">Nf6</span> <span class="mf">2.</span> <span class="n">c4</span> <span class="n">e6</span> <span class="mf">3.</span> <span class="n">Nf3</span> <span class="n">b6</span> <span class="mf">4.</span> <span class="n">g3</span> <span class="n">Bb7</span> <span class="mf">5.</span> <span class="n">Bg2</span> <span class="n">Bb4</span><span class="o">+</span> <span class="mf">6.</span> <span class="n">Bd2</span> <span class="n">Be7</span> <span class="mf">7.</span> <span class="n">Nc3</span> <span class="n">O</span><span class="o">-</span><span class="n">O</span>
+<span class="mf">8.</span> <span class="n">Qc2</span> <span class="n">Na6</span> <span class="mf">9.</span> <span class="n">a3</span> <span class="n">c5</span> <span class="mf">10.</span> <span class="n">d5</span> <span class="n">exd5</span> <span class="mf">11.</span> <span class="n">Ng5</span> <span class="n">Nc7</span> <span class="mf">12.</span> <span class="n">h4</span> <span class="n">h6</span> <span class="mf">13.</span> <span class="n">Nxd5</span> <span class="n">Ncxd5</span>
+<span class="mf">14.</span> <span class="n">cxd5</span> <span class="n">d6</span> <span class="mf">15.</span> <span class="n">a4</span> <span class="n">Qd7</span> <span class="mf">16.</span> <span class="n">Bc3</span> <span class="n">Rfe8</span> <span class="mf">17.</span> <span class="n">O</span><span class="o">-</span><span class="n">O</span><span class="o">-</span><span class="n">O</span> <span class="n">Bd8</span> <span class="mf">18.</span> <span class="n">e4</span> <span class="n">Ng4</span>
+<span class="mf">19.</span> <span class="n">Bh3</span> <span class="n">hxg5</span> <span class="mf">20.</span> <span class="n">f3</span> <span class="n">f5</span> <span class="mf">21.</span> <span class="n">fxg4</span> <span class="n">fxg4</span> <span class="mf">22.</span> <span class="n">Bf1</span> <span class="n">gxh4</span> <span class="mf">23.</span> <span class="n">Bb5</span> <span class="n">Qf7</span>
+<span class="mf">24.</span> <span class="n">gxh4</span> <span class="n">Bf6</span> <span class="mf">25.</span> <span class="n">Rhf1</span> <span class="n">Rf8</span> <span class="mf">26.</span> <span class="n">Bxf6</span> <span class="n">gxf6</span> <span class="mf">27.</span> <span class="n">Rf4</span> <span class="n">Qg7</span> <span class="mf">28.</span> <span class="n">Be2</span> <span class="n">Qh6</span>
+<span class="mf">29.</span> <span class="n">Rdf1</span> <span class="n">g3</span> <span class="mf">30.</span> <span class="n">Qd3</span> <span class="n">Kh8</span> <span class="mf">31.</span> <span class="n">Qxg3</span> <span class="n">Rae8</span> <span class="mf">32.</span> <span class="n">Bd3</span> <span class="n">Bc8</span> <span class="mf">33.</span> <span class="n">Kb1</span> <span class="n">Rf7</span>
+<span class="mf">34.</span> <span class="n">Qf2</span> <span class="n">Bd7</span> <span class="mf">35.</span> <span class="n">h5</span> <span class="n">Ref8</span> <span class="mf">36.</span> <span class="n">Bc2</span> <span class="n">Be8</span> <span class="mf">37.</span> <span class="n">Rf3</span> <span class="n">Re7</span> <span class="mf">38.</span> <span class="n">Rxf6</span> <span class="n">Qxf6</span>
+<span class="mf">39.</span> <span class="n">Qxf6</span><span class="o">+</span> <span class="n">Rxf6</span> <span class="mf">40.</span> <span class="n">Rxf6</span> <span class="n">Kg7</span> <span class="mf">41.</span> <span class="n">Rxd6</span> <span class="n">Bxh5</span> <span class="mf">42.</span> <span class="n">Kc1</span> <span class="n">Re5</span> <span class="mf">43.</span> <span class="n">a5</span> <span class="n">bxa5</span>
+<span class="mf">44.</span> <span class="n">Kd2</span> <span class="n">Be8</span> <span class="mf">45.</span> <span class="n">Ra6</span> <span class="n">Rh5</span> <span class="mf">46.</span> <span class="n">Bd3</span> <span class="n">a4</span> <span class="mf">47.</span> <span class="n">d6</span> <span class="n">Bf7</span> <span class="mf">48.</span> <span class="n">d7</span> <span class="n">Rh8</span> <span class="mf">49.</span> <span class="n">e5</span> <span class="mi">1</span><span class="o">-</span><span class="mi">0</span>
+</pre></div>
+</div>
+<div class="section" id="the-approach">
+<h2>The Approach<a class="headerlink" href="#the-approach" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>MCTS – Monte Carlo Tree Search</li>
+<li>Reinforcment Learning</li>
+<li>Deep convolutional neural networks</li>
+</ol>
+<p>The DeepMind team published their results five months ago in the
+December 2018 <em>Science</em>, “A general reinforcement learning
+algorithm that masters chess, shogi and Go through self-play”.
+See: <a class="reference external" href="https://deepmind.com/documents/260/alphazero_preprint.pdf">https://deepmind.com/documents/260/alphazero_preprint.pdf</a></p>
+<p>Their self-assessment:</p>
+<blockquote>
+<div>“Our results demonstrate that a general-purpose reinforcement learning algorithm
+can learn, tabula rasa – without domain-specific human knowledge or data, as
+evidenced by the same algorithm succeeding in multiple domains – superhuman
+performance across multiple challenging games.”</div></blockquote>
+<p>Assessment by Garry Kasparov:</p>
+<blockquote>
+<div>“I can’t disguise my satisfaction that it plays with a very dynamic style, much like my own!”</div></blockquote>
+</div>
+<div class="section" id="code-you-can-run">
+<h2>Code You Can Run<a class="headerlink" href="#code-you-can-run" title="Permalink to this headline">¶</a></h2>
+<p>The advancements from <em>AlphaZero</em> were incorporated in incorporated <em>Leela Chess
+Zero</em></p>
+<p>Leela Chess is free software.  See <a class="reference external" href="https://github.com/LeelaChessZero/lc0">https://github.com/LeelaChessZero/lc0</a></p>
+<p>It is built using <em>Meson</em> with Python 3 but running primary CUDA code on the
+GPU.</p>
+<p>See the <a class="reference external" href="http://blog.lczero.org/2018/12/alphazero-paper-and-lc0-v0191.html">LCBlog blog</a> to get started.</p>
+</div>
+<div class="section" id="overview-of-monte-carlo-tree-search">
+<h2>Overview of Monte Carlo Tree Search<a class="headerlink" href="#overview-of-monte-carlo-tree-search" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/MCTS_(English)_-_Updated_2017-11-19.svg" src="_images/MCTS_(English)_-_Updated_2017-11-19.svg" /></div>
+<div class="section" id="the-algorithm">
+<h2>The Algorithm<a class="headerlink" href="#the-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>Here is the outline as summarized in the DeepMind paper:</p>
+<blockquote>
+<div><p>AlphaZero replaces the handcrafted knowledge and domain-specific augmentations
+used in traditional game-playing programs with deep neural networks, a
+general-purpose reinforcement learning algorithm, and a general-purpose tree
+search algorithm.</p>
+<p>Instead of a handcrafted evaluation function and move ordering heuristics,
+AlphaZero uses a deep neural network (p, v) = fθ(s) with parameters θ. This
+neural network fθ(s) takes the board position s as an input and outputs a vector
+of move probabilities p with components pa = Pr(a|s) for each action a, and a
+scalar value v estimating the expected outcome z of the game from position s, v
+≈ E[z|s]. AlphaZero learns these move probabilities and value estimates entirely
+from self-play; these are then used to guide its search in future games.</p>
+<p>Instead of an alpha-beta search with domain-specific enhancements, AlphaZero
+uses a generalpurpose Monte Carlo tree search (MCTS) algorithm. Each search
+consists of a series of simulated games of self-play that traverse a tree from
+root state sroot until a leaf state is reached.  Each simulation proceeds by
+selecting in each state s a move a with low visit count (not previously
+frequently explored), high move probability and high value (averaged over the
+leaf states of simulations that selected a from s) according to the current
+neural network fθ. The search returns a vector π representing a probability
+distribution over moves, πa = Pr(a|sroot).</p>
+<p>The parameters θ of the deep neural network in AlphaZero are trained by
+reinforcement learning from self-play games, starting from randomly
+initialized parameters θ. Each game is played by running an MCTS search
+from the current position sroot = st at turn t, and then selecting a move,
+at ∼ πt , either proportionally (for exploration) or greedily (for
+exploitation) with respect to the visit counts at the root state. At the
+end of the game, the terminal position sT is scored according to the rules
+of the game to compute the game outcome z: −1 for a loss, 0 for a draw,
+and +1 for a win. The neural network parameters θ are updated to minimize
+the error between the predicted outcome vt and the game outcome z, and to
+maximize the similarity of the policy vector pt to the search
+probabilities πt.  The updated parameters are used in subsequent games of
+self-play.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="philosophy.html" class="btn btn-neutral float-right" title="The Future" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dining.html" class="btn btn-neutral" title="SMT and Model Checkers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Raymond Hettinger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

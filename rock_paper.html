@@ -1,0 +1,511 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Pattern Recognition and Reinforcement Learning &mdash; US Pycon December 2019  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SMT and Model Checkers" href="dining.html" />
+    <link rel="prev" title="SAT Solvers" href="einstein.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> US Pycon December 2019
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="puzzle.html">Depth First and Breath First Search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="einstein.html">SAT Solvers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pattern Recognition and Reinforcement Learning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rock-paper-scissors">Rock Paper Scissors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#our-approach">Our Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#helpful-python-skills">Helpful Python Skills</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-code">The Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#critiques-and-improvements">Critiques and Improvements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#where-you-can-go-from-here">Where you can go from here</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dining.html">SMT and Model Checkers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alpha_zero.html">AlphaZero</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">The Future</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">US Pycon December 2019</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Pattern Recognition and Reinforcement Learning</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pattern-recognition-and-reinforcement-learning">
+<h1>Pattern Recognition and Reinforcement Learning<a class="headerlink" href="#pattern-recognition-and-reinforcement-learning" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p><strong>Problem:</strong> Getting son to eat broccoli</p>
+<p><strong>Strategies</strong>:</p>
+<ul class="simple">
+<li>Acclimatization: Serve once a week until he gets used to it</li>
+<li>Better than alternative: It’s better than spinach</li>
+<li>Enticements: We’ll watch your favorite movie after</li>
+<li>Trickery: It’s candy</li>
+<li>Testimonial: Your best friend likes it</li>
+<li>Wait it out: We’re not leaving this table until …</li>
+<li>Piecemeal: Just one little bite</li>
+<li>Appeal to Reason: Great source of vitamins K and C</li>
+</ul>
+<p><strong>Reinforcement Learning:</strong></p>
+<p>Randomly try strategies.  If they work, choose them more often.</p>
+</div>
+<div class="section" id="rock-paper-scissors">
+<h2>Rock Paper Scissors<a class="headerlink" href="#rock-paper-scissors" title="Permalink to this headline">¶</a></h2>
+<p>This is an iterated adversarial zero-sum two-person game of perfect information.</p>
+<img alt="_images/300px-Rock-paper-scissors.svg.png" src="_images/300px-Rock-paper-scissors.svg.png" />
+<p>The scoring logic is easily encoded in a Python dictionary:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># scorer[&#39;RS&#39;] -&gt; 1 meaning Rock cuts Scissors is +1 for the first player.</span>
+<span class="n">scorer</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">SP</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">PR</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">RS</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">PS</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">RP</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">SR</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">SS</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">PP</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">RR</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now, it’s time to thinking about winning (not losing):</p>
+<ul class="simple">
+<li>Playing randomly assures that we lose no more than one-third of the time, regardless
+of our opponent’s strategy.</li>
+<li>If our opponent is completely predictable, we can always win.</li>
+<li>In the real world, humans have a hard time simulating perfect randomness
+or who “have a plan” to beat us:<ul>
+<li>A mild preference for <em>paper</em></li>
+<li>Propensity to select <em>rock</em> after they’ve played <em>scissors</em></li>
+<li>If we play <em>paper</em>, they often select <em>scissors</em> on the next round</li>
+<li>They tend to copy our last play</li>
+</ul>
+</li>
+<li>In other words, there may be patterns that we can detect and exploit
+to win more than a third of the time.</li>
+</ul>
+</div>
+<div class="section" id="our-approach">
+<h2>Our Approach<a class="headerlink" href="#our-approach" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Generate multiple competing pattern recognition strategies</p>
+</li>
+<li><p class="first">Choose between the strategies <a class="reference external" href="https://en.wikipedia.org/wiki/Multi-armed_bandit">multi-arm bandit</a>
+approach to <a class="reference external" href="https://en.wikipedia.org/wiki/Reinforcement_learning">reinforcement learning</a>.</p>
+</li>
+<li><p class="first">Core logic:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+  <span class="c1"># choose our move</span>
+  <span class="c1"># get opponent&#39;s move</span>
+  <span class="c1"># determine the winner</span>
+  <span class="c1"># update move history and strategy weights</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="helpful-python-skills">
+<h2>Helpful Python Skills<a class="headerlink" href="#helpful-python-skills" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">itertools.chain()</span></code> links to multiple iterables into one:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="s1">&#39;RPRPS&#39;</span><span class="p">,</span> <span class="s1">&#39;RPS&#39;</span><span class="p">))</span>
+<span class="go">[&#39;R&#39;, &#39;P&#39;, &#39;R&#39;, &#39;P&#39;, &#39;S&#39;, &#39;R&#39;, &#39;P&#39;, &#39;S&#39;]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">itertools.cycle()</span></code> repeats a sequence over and over again:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">cycle</span><span class="p">,</span> <span class="n">islice</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">cycle</span><span class="p">(</span><span class="s1">&#39;RPS&#39;</span><span class="p">),</span> <span class="mi">9</span><span class="p">))</span>
+<span class="go">[&#39;R&#39;, &#39;P&#39;, &#39;S&#39;, &#39;R&#39;, &#39;P&#39;, &#39;S&#39;, &#39;R&#39;, &#39;P&#39;, &#39;S&#39;]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">collections.Counter()</span></code> tallies frequencies of the inputs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;RPRPSRPSR&#39;</span><span class="p">)</span>
+<span class="go">Counter({&#39;R&#39;: 4, &#39;P&#39;: 3, &#39;S&#39;: 2})</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">Counter.most_common(n)</span></code> picks the <em>n</em> most common counts:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;RPRPSRPSR&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[(&#39;R&#39;, 4), (&#39;P&#39;, 3)]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">zip(*somedict.items())</span></code> transposes items into a separate keys and values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">R</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span>
+<span class="go">(&#39;R&#39;, &#39;P&#39;, &#39;S&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span>
+<span class="go">(4, 3, 2)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">zip(a,</span> <span class="pre">a[1:])</span></code> groups input into overlapping digraphs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="s1">&#39;abcde&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+<span class="go">[(&#39;a&#39;, &#39;b&#39;), (&#39;b&#39;, &#39;c&#39;), (&#39;c&#39;, &#39;d&#39;), (&#39;d&#39;, &#39;e&#39;)]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">random.choices(population,</span> <span class="pre">weights)[0]</span></code> makes a weighted choice from a population:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">choices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">choices</span><span class="p">([</span><span class="s1">&#39;R&#39;</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">[&#39;P&#39;, &#39;P&#39;, &#39;R&#39;, &#39;S&#39;, &#39;R&#39;, &#39;P&#39;, &#39;P&#39;, &#39;R&#39;, &#39;R&#39;, &#39;P&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Counter</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">Counter({&#39;P&#39;: 5, &#39;R&#39;: 4, &#39;S&#39;: 1})</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="the-code">
+<h2>The Code<a class="headerlink" href="#the-code" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">&#39;&#39;&#39; Generic learning algorithm for adversarial two-person</span>
+<span class="sd">    zero-sum games of perfect information.</span>
+
+<span class="sd">    General approach:  Make a list of strategies based</span>
+<span class="sd">    on pattern recognition. Use the multi-arm bandit</span>
+<span class="sd">    approach to learning which strategies win the most.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">choice</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">cycle</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+
+<span class="c1"># Game Definition ################################</span>
+
+<span class="c1"># https://en.wikipedia.org/wiki/Rock%E2%80%93paper%E2%80%93scissors</span>
+<span class="c1"># scorer[&#39;RS&#39;] -&gt; 1 meaning Rock cuts Scissors is +1 for the first player.</span>
+<span class="n">scorer</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">SP</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">PR</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">RS</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">PS</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">RP</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">SR</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">SS</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">PP</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">RR</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Scissors cuts Paper; Paper covers Rock; Rock crushes Scissors</span>
+<span class="n">ideal_response</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;P&#39;</span><span class="p">:</span> <span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">:</span> <span class="s1">&#39;R&#39;</span><span class="p">}</span>
+<span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">]</span>
+
+<span class="c1"># Strategy Utilities #############################</span>
+
+<span class="k">def</span> <span class="nf">select_proportional</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">baseline</span><span class="o">=</span><span class="p">()):</span>
+    <span class="n">rel_freq</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">events</span><span class="p">))</span>
+    <span class="n">population</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">rel_freq</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">choices</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">weights</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">select_maximum</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">baseline</span><span class="o">=</span><span class="p">()):</span>
+    <span class="n">rel_freq</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">events</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rel_freq</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Strategies #####################################</span>
+
+<span class="k">def</span> <span class="nf">random_reply</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">choice</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">single_event_proportional</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; When opponent plays R two-thirds of the time,</span>
+<span class="sd">        respond with P two-thirds of the time.&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prediction</span> <span class="o">=</span> <span class="n">select_proportional</span><span class="p">(</span><span class="n">p2hist</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ideal_response</span><span class="p">[</span><span class="n">prediction</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">single_event_greedy</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; When opponent plays R more than P or S,</span>
+<span class="sd">        always respond with P.&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prediction</span> <span class="o">=</span> <span class="n">select_maximum</span><span class="p">(</span><span class="n">p2hist</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ideal_response</span><span class="p">[</span><span class="n">prediction</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">digraph_event_proportional</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; When opponent&#39;s most recent play is S</span>
+<span class="sd">        and they usually play R two-thirds of the time</span>
+<span class="sd">        after an S, respond with P two-thirds of the time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">recent_play</span> <span class="o">=</span> <span class="n">p2hist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">digraphs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">p2hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">followers</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">digraphs</span> <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">recent_play</span><span class="p">]</span>
+    <span class="n">prediction</span> <span class="o">=</span> <span class="n">select_proportional</span><span class="p">(</span><span class="n">followers</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ideal_response</span><span class="p">[</span><span class="n">prediction</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">digraph_event_greedy</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; When opponent&#39;s most recent play is S</span>
+<span class="sd">        and they usually play R two-thirds of the time</span>
+<span class="sd">        after an S, respond with P all of the time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">recent_play</span> <span class="o">=</span> <span class="n">p2hist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">digraphs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">p2hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">followers</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">digraphs</span> <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">recent_play</span><span class="p">]</span>
+    <span class="n">prediction</span> <span class="o">=</span> <span class="n">select_maximum</span><span class="p">(</span><span class="n">followers</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ideal_response</span><span class="p">[</span><span class="n">prediction</span><span class="p">]</span>
+
+<span class="n">strategies</span> <span class="o">=</span> <span class="p">[</span><span class="n">random_reply</span><span class="p">,</span> <span class="n">single_event_proportional</span><span class="p">,</span> <span class="n">single_event_greedy</span><span class="p">,</span>
+              <span class="n">digraph_event_proportional</span><span class="p">,</span> <span class="n">digraph_event_greedy</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">play_and_learn</span><span class="p">(</span><span class="n">opposition</span><span class="p">,</span> <span class="n">strategies</span><span class="o">=</span><span class="n">strategies</span><span class="p">,</span>
+                   <span class="n">trials</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">strategy_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">strategies</span><span class="p">))</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">strategies</span><span class="p">)</span>
+    <span class="n">p1hist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">p2hist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cum_score</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+        <span class="c1"># choose our move</span>
+        <span class="n">our_moves</span> <span class="o">=</span> <span class="p">[</span><span class="n">strategy</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">)</span> <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="n">strategies</span><span class="p">]</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">choices</span><span class="p">(</span><span class="n">strategy_range</span><span class="p">,</span> <span class="n">weights</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">our_move</span> <span class="o">=</span> <span class="n">our_moves</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="c1"># get opponent&#39;s move</span>
+        <span class="n">opponent_move</span> <span class="o">=</span> <span class="n">opposition</span><span class="p">(</span><span class="n">p2hist</span><span class="p">,</span> <span class="n">p1hist</span><span class="p">)</span>
+
+        <span class="c1"># determine the winner</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">scorer</span><span class="p">[</span><span class="n">our_move</span> <span class="o">+</span> <span class="n">opponent_move</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{our_move}</span><span class="s1"> ~ </span><span class="si">{opponent_move}</span><span class="s1"> = </span><span class="si">{score:+d}</span><span class="s1">&#39;</span>
+                  <span class="n">f</span><span class="s1">&#39;</span><span class="se">\t\t</span><span class="si">{strategies[i].__name__}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">cum_score</span> <span class="o">+=</span> <span class="n">score</span>
+
+        <span class="c1"># update move history and strategy weights</span>
+        <span class="n">p1hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">our_move</span><span class="p">)</span>
+        <span class="n">p2hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opponent_move</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">our_move</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">our_moves</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">scorer</span><span class="p">[</span><span class="n">our_move</span> <span class="o">+</span> <span class="n">opponent_move</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;---- vs. </span><span class="si">{opposition.__name__}</span><span class="s1"> ----&#39;</span><span class="p">)</span>            
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total score:&#39;</span><span class="p">,</span> <span class="n">cum_score</span><span class="p">)</span>
+    <span class="n">pprint</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([(</span><span class="n">weight</span><span class="p">,</span> <span class="n">strategy</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">strategies</span><span class="p">)]))</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">human</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">input</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Choose one of </span><span class="si">{options!r}</span><span class="s1">: &#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fixed_ratio</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">choices</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">cycling</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+        <span class="n">iterator</span> <span class="o">=</span> <span class="n">cycle</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">cycle_opponent</span><span class="p">(</span><span class="n">p1hist</span><span class="p">,</span> <span class="n">p2hist</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cycle_opponent</span>
+
+    <span class="n">play_and_learn</span><span class="p">(</span><span class="n">opposition</span><span class="o">=</span><span class="n">fixed_ratio</span><span class="p">)</span>
+    <span class="n">play_and_learn</span><span class="p">(</span><span class="n">opposition</span><span class="o">=</span><span class="n">random_reply</span><span class="p">)</span>
+    <span class="n">play_and_learn</span><span class="p">(</span><span class="n">opposition</span><span class="o">=</span><span class="n">cycling</span><span class="p">(</span><span class="s1">&#39;RPRSS&#39;</span><span class="p">))</span>
+    <span class="n">play_and_learn</span><span class="p">(</span><span class="n">opposition</span><span class="o">=</span><span class="n">human</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="critiques-and-improvements">
+<h2>Critiques and Improvements<a class="headerlink" href="#critiques-and-improvements" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>When humans are losing, they generally change they strategy,
+so we should “age” our weights to adapt to the change.</li>
+<li>The <em>random_reply</em> strategy wins one-third of the time
+so it keeps getting selected when other strategies are
+doing better.</li>
+<li>We need to keep <em>random_reply</em> in the mix in case our
+strategies get figured-out and gamed. Randomness is
+your best defense against a smarter adversary.</li>
+<li>The multi-arm bandit approach (choosing the strategy
+proportionally to wins and losses) results in very
+slow learning.</li>
+<li>Humans get bored with this game quickly, so it is hard
+get people to test it.</li>
+</ul>
+</div>
+<div class="section" id="where-you-can-go-from-here">
+<h2>Where you can go from here<a class="headerlink" href="#where-you-can-go-from-here" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>None of the code logic is hard-wired to the basic game.</li>
+<li>It is easy to add new strategies.</li>
+<li>Or to evaluate various published
+<a class="reference external" href="https://www.telegraph.co.uk/men/thinking-man/11051704/How-to-always-win-at-rock-paper-scissors.html">how-to-win strategies</a>.</li>
+<li>Changing the game definition logic allows for more complex
+games such as rock-paper-scissors-lizard-spock:</li>
+</ul>
+<img alt="_images/1200px-Rock_Paper_Scissors_Lizard_Spock_en.svg.png" src="_images/1200px-Rock_Paper_Scissors_Lizard_Spock_en.svg.png" />
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dining.html" class="btn btn-neutral float-right" title="SMT and Model Checkers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="einstein.html" class="btn btn-neutral" title="SAT Solvers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Raymond Hettinger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

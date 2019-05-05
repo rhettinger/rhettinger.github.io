@@ -1,0 +1,18 @@
+The Future
+==========
+
+Risk of prediction:
+
+    "Difficult to predict, the future is, always in motion" -- Master Yoda
+
+.. image:: images/yoda.jpg
+
+Does it end badly?
+
+.. image:: images/terminator.jpg
+
+Garry Kasparov doesn't think so.
+
+I highly recommend his book, `Deep Thinking <http://www.kasparov.com/deep-thinking-ai/>`_.
+
+.. image:: images/deep_thinking.jpg

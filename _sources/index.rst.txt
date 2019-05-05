@@ -1,0 +1,34 @@
+Raymond Hettinger -- US Pycon 2019
+==================================
+
+
+My Mission
+    Train thousands of Python Programmers
+
+Contact Info
+    raymond dot hettinger at gmail dot com
+
+Company
+    Mutable Minds, Inc.
+
+Training videos
+    Free to user's of Safari Online:
+    "Modern Python: Big Ideas, Little Code"
+
+Twitter Account
+    @raymondh
+
+
+Learning from Puzzles and Games
+-------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   overview.rst
+   puzzle.rst
+   einstein.rst
+   rock_paper.rst
+   dining.rst
+   alpha_zero.rst
+   philosophy.rst

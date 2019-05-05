@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SMT and Model Checkers &mdash; US Pycon December 2019  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="AlphaZero" href="alpha_zero.html" />
+    <link rel="prev" title="Pattern Recognition and Reinforcement Learning" href="rock_paper.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> US Pycon December 2019
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="puzzle.html">Depth First and Breath First Search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="einstein.html">SAT Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rock_paper.html">Pattern Recognition and Reinforcement Learning</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SMT and Model Checkers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#technical-lingo">Technical Lingo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dining-philosophers">Dining Philosophers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-the-solver-does">What the Solver Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tla-model-checker">TLA⁺ model checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other-tools">Other Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="alpha_zero.html">AlphaZero</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">The Future</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">US Pycon December 2019</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>SMT and Model Checkers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="smt-and-model-checkers">
+<h1>SMT and Model Checkers<a class="headerlink" href="#smt-and-model-checkers" title="Permalink to this headline">¶</a></h1>
+<p>The next steps up for tree searchers and SAT solvers:</p>
+<ul class="simple">
+<li>State more complex than just truth tables</li>
+<li>Searching a graph instead of a tree</li>
+<li>Temporal logic</li>
+</ul>
+<div class="section" id="technical-lingo">
+<h2>Technical Lingo<a class="headerlink" href="#technical-lingo" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Satisfiability Modulo Theories (SMT) Problem</dt>
+<dd>Decision problem for logical
+first order formulas with respect to combinations of background theories such
+as: arithmetic, bit-vectors, arrays, and uninterpreted functions.</dd>
+</dl>
+</div>
+<div class="section" id="dining-philosophers">
+<h2>Dining Philosophers<a class="headerlink" href="#dining-philosophers" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/dining_philosopher_problem.png" src="_images/dining_philosopher_problem.png" />
+<p>Core model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>State of one chopstick ∈ { Unused, LeftPhilosopher, RightPhilsopher }
+
+State of all chopsticks ∈ {&#39;UUUUU&#39;, &#39;UUUUL&#39;, &#39;UUURL&#39;, &#39;RUURL&#39;, ... }
+
+Number of possible states:  3⁵ = 243
+
+Implied states for a philosopher:
+    0 chopsticks held ⟶  Thinking
+    1 chopsticks held ⟶  Trying to eat
+    2 chopsticks held ⟶  Eating
+
+Unconstrained chopstick state transitions:
+    Unused ⟶  LeftPhilosopher
+    Unused ⟶  RightPhilsopher
+    LeftPhilosopher ⟶  Unused
+    RightPhilsopher ⟶  Unused
+</pre></div>
+</div>
+<p>Constrain the model with philosopher strategies:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Strategy D:
+    0 chopsticks held ⟶  AcquireLeft
+    1 chopsticks held ⟶  AcquireRight
+    2 chopsticks held ⟶  ReleaseBoth
+
+Strategy S:
+   Philosopher zero always holds left chopstick
+
+Strategy H:
+    0 chopsticks held ∧ no request  ⟶  Enqueue an eat request
+    0 chopsticks held ∧ requested but not available ⟶  Wait
+    0 chopsticks held ∧ requested available ⟶  AcquireLeft
+    1 chopsticks held ⟶  AcquireRight
+    2 chopsticks held ⟶  ReleaseBoth
+</pre></div>
+</div>
+</div>
+<div class="section" id="what-the-solver-does">
+<h2>What the Solver Does<a class="headerlink" href="#what-the-solver-does" title="Permalink to this headline">¶</a></h2>
+<p>The transitions generate a graph.</p>
+<p>The solver traverses the graph to see if:
+1) every state has an exit state – deadlocks
+2) every path loop has every philosopher eating – no one starves</p>
+<p>Unlike the puzzle solvers, we need “temporal operators”
+that check the relationship between a succession of states:</p>
+<p><strong>Predicate P is always true.</strong></p>
+<blockquote>
+<div>A chopstick is held by 0 or 1 philosophers</div></blockquote>
+<p><strong>Predicate P is eventually true</strong></p>
+<blockquote>
+<div>A philosopher with a left chopstick eventually gets a right one</div></blockquote>
+<p><strong>Predicate P is always eventually true</strong></p>
+<blockquote>
+<div>After eating, a philosopher is always able to eat again</div></blockquote>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>UUUUU -&gt; ... -&gt; UURLU -&gt;  ULUUU -&gt; ... -&gt; UURLU -&gt; ...
+                   ^                         ^
+                   |                         |
+                P₃ eats   P₃ thinks       P₃ eats
+</pre></div>
+</div>
+</div>
+<div class="section" id="tla-model-checker">
+<h2>TLA⁺ model checker<a class="headerlink" href="#tla-model-checker" title="Permalink to this headline">¶</a></h2>
+<p>The TLA⁺ model checker generate the contrained graph, follows all
+paths, and checks all of the temporal invariants.</p>
+<p>Here’s <a class="reference external" href="https://lamport.azurewebsites.net/tla/p-manual.pdf">PlusCal</a>
+model for the dining philosophers problem.</p>
+<img alt="_images/dining_round_tla.png" src="_images/dining_round_tla.png" />
+<p>For a nice write-up on using TLA⁺ for the dining philosophers problem see
+the blog post by Murat Demirbas at
+<a class="reference external" href="http://muratbuffalo.blogspot.com/2016/10/modeling-dining-philosophers-algorithm.html">http://muratbuffalo.blogspot.com/2016/10/modeling-dining-philosophers-algorithm.html</a></p>
+</div>
+<div class="section" id="other-tools">
+<h2>Other Tools<a class="headerlink" href="#other-tools" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>Z3Py</strong> package lets you drive Microsoft’s Z3 solver, a production ready
+powerful SMT solver.</p>
+<p>To get started, see this tutorial:
+<a class="reference external" href="https://ericpony.github.io/z3py-tutorial/guide-examples.htm">https://ericpony.github.io/z3py-tutorial/guide-examples.htm</a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="alpha_zero.html" class="btn btn-neutral float-right" title="AlphaZero" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rock_paper.html" class="btn btn-neutral" title="Pattern Recognition and Reinforcement Learning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Raymond Hettinger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
