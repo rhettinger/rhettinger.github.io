@@ -1,4 +1,4 @@
-Depth First and Breath First Search
+Depth First and Breadth First Search
 ===================================
 
 Overview
